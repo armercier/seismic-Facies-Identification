@@ -5,6 +5,6 @@ data/data_test_1.npz
 data/labels_train.npz
 data/sample_submission_1.npz
 venv/
-.idea\
+.idea/
 __pycache__/
 __pycache__\
