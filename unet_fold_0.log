@@ -1,0 +1,35 @@
+[2020-11-13 17:26:24,798][ERROR]: CUDA out of memory. Tried to allocate 2.00 MiB (GPU 0; 2.00 GiB total capacity; 1.15 GiB already allocated; 1.30 MiB free; 1.17 GiB reserved in total by PyTorch)
+Traceback (most recent call last):
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\argus\engine\engine.py", line 86, in run
+    self.state.step_output = self.step_function(batch, self.state)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\argus\model\model.py", line 76, in train_step
+    prediction = self.nn_module(input)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\segmentation_models_pytorch\base\model.py", line 16, in forward
+    decoder_output = self.decoder(*features)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\segmentation_models_pytorch\unet\decoder.py", line 119, in forward
+    x = decoder_block(x, skip)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\segmentation_models_pytorch\unet\decoder.py", line 42, in forward
+    x = self.attention2(x)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\segmentation_models_pytorch\base\modules.py", line 118, in forward
+    return self.attention(x)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\segmentation_models_pytorch\base\modules.py", line 63, in forward
+    return x * self.cSE(x) + x * self.sSE(x)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\container.py", line 117, in forward
+    input = module(input)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "c:\users\arno\documents\github\seismic-facies-identification\venv\lib\site-packages\torch\nn\modules\activation.py", line 299, in forward
+    return torch.sigmoid(input)
+RuntimeError: CUDA out of memory. Tried to allocate 2.00 MiB (GPU 0; 2.00 GiB total capacity; 1.15 GiB already allocated; 1.30 MiB free; 1.17 GiB reserved in total by PyTorch)

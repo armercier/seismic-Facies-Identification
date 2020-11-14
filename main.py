@@ -5,5 +5,4 @@ import matplotlib.pyplot as plt
 
 train, labels, test = importData('data/data_train.npz','data/labels_train.npz','data/data_test_1.npz')
 
-plt.imshow(labels[500,:,:])
-plt.show()
+a=2
