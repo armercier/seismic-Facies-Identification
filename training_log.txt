@@ -1,0 +1,30 @@
+C:\Users\arno\Documents\GitHub\seismic-Facies-Identification\venv\Scripts\python.exe C:/Users/arno/Documents/GitHub/seismic-Facies-Identification/main.py
+start loading
+data loaded
+fold created
+(1006, 590)
+(1006, 590, 1)
+(1, 1006, 590)
+start trainning loop
+0
+C:\Users\arno\Documents\GitHub\seismic-Facies-Identification\venv\lib\site-packages\argus\callbacks\checkpoints.py:52: UserWarning: Directory 'unet_fold_0' already exists
+  warnings.warn(f"Directory '{dir_path}' already exists")
+[2020-11-15 13:08:30,585][INFO]: Validation, val_loss: 2.553605
+[2020-11-15 13:16:42,299][INFO]: Train - Epoch: 0, LR: 0.01, train_loss: 0.003875506
+[2020-11-15 13:18:39,686][INFO]: Validation - Epoch: 0, val_loss: 0.002833203
+[2020-11-15 13:18:39,910][INFO]: Model saved to 'unet_fold_0\model-000-0.002833.pth'
+[2020-11-15 13:26:55,450][INFO]: Train - Epoch: 1, LR: 0.01, train_loss: 7.921881e-05
+[2020-11-15 13:28:56,042][INFO]: Validation - Epoch: 1, val_loss: 0.002784086
+[2020-11-15 13:28:56,488][INFO]: Model saved to 'unet_fold_0\model-001-0.002784.pth'
+[2020-11-15 13:37:10,022][INFO]: Train - Epoch: 2, LR: 0.01, train_loss: 0.0007355491
+[2020-11-15 13:39:08,295][INFO]: Validation - Epoch: 2, val_loss: 0.002768639
+[2020-11-15 13:39:08,569][INFO]: Model saved to 'unet_fold_0\model-002-0.002769.pth'
+[2020-11-15 13:47:18,771][INFO]: Train - Epoch: 3, LR: 0.01, train_loss: 4.064825e-05
+[2020-11-15 13:49:16,435][INFO]: Validation - Epoch: 3, val_loss: 0.002761709
+[2020-11-15 13:49:16,667][INFO]: Model saved to 'unet_fold_0\model-003-0.002762.pth'
+[2020-11-15 13:49:16,675][INFO]: Model removed 'unet_fold_0\model-000-0.002833.pth'
+[2020-11-15 13:57:29,761][INFO]: Train - Epoch: 4, LR: 0.01, train_loss: 0.0007184024
+[2020-11-15 13:59:27,243][INFO]: Validation - Epoch: 4, val_loss: 0.002758467
+[2020-11-15 13:59:27,460][INFO]: Model saved to 'unet_fold_0\model-004-0.002758.pth'
+[2020-11-15 13:59:27,462][INFO]: Model removed 'unet_fold_0\model-001-0.002784.pth'
+1

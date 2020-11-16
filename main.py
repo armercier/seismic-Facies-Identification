@@ -52,6 +52,8 @@ if __name__ == "__main__":
     adjusted_test_img = (adjusted_test_img - _min) / (_max - _min)
 
     del adjusted_test_img
+    # del train
+    # del labels
     print('data loaded')
     #%% md
 
@@ -59,18 +61,18 @@ if __name__ == "__main__":
 
     #%%
 
-    verticals = [0 for _ in range(train.shape[1])] + [1 for _ in range(train.shape[2])]
-    folds = list(StratifiedKFold(n_splits=5, random_state=42, shuffle=True).split(X=verticals, y=verticals))
-    print('fold created')
+    # verticals = [0 for _ in range(train.shape[1])] + [1 for _ in range(train.shape[2])]
+    # folds = list(StratifiedKFold(n_splits=5, random_state=42, shuffle=True).split(X=verticals, y=verticals))
+    # print('fold created')
     #%%
 
-    img = train[:,5]
-    img800 = train[:,:,800-482]
-    print(img.shape)
-    image = img[:, :, None]
-    print(image.shape)
-    tran = image.transpose(2,0,1)
-    print(tran.shape)
+    # img = train[:,5]
+    # img800 = train[:,:,800-482]
+    # print(img.shape)
+    # image = img[:, :, None]
+    # print(image.shape)
+    # tran = image.transpose(2,0,1)
+    # print(tran.shape)
 
     #%%
 
@@ -196,31 +198,68 @@ if __name__ == "__main__":
 
     #%%
 
-    dataset = SeismicFaciesDataset(train, train)
+    # dataset = SeismicFaciesDataset(train, train)
 
     #%%
 
 
 
     #%%
-    print('start trainning loop')
-    for i, (train_index, test_index) in enumerate(folds):
-        print(i)
-        model = SeismicFaciesModel(params)
-        model.set_device(0)
+    # print('start trainning loop')
+    # for i, (train_index, test_index) in enumerate(folds):
+    #     print(i)
+    #     model = SeismicFaciesModel(params)
+    #     model.set_device(0)
+    #
+    #     train_loader, val_loader = get_data_loaders(dataset, batch_size=1, train_index=train_index, test_index=test_index)
+    #
+    #     callbacks = [
+    #         MonitorCheckpoint(dir_path=f'unet_fold_{i}', monitor='val_loss', max_saves=3),
+    #         ReduceLROnPlateau(monitor='val_loss', patience=30, factor=0.64, min_lr=1e-8),
+    #         EarlyStopping(monitor='val_loss', patience=50),
+    #         LoggingToFile(f'unet_fold_{i}.log'),
+    #     ]
+    #
+    #     model.fit(train_loader,
+    #           val_loader=val_loader,
+    #           num_epochs=5,
+    #           metrics=['loss'],
+    #           callbacks=callbacks,
+    #           metrics_on_train=False)
 
-        train_loader, val_loader = get_data_loaders(dataset, batch_size=1, train_index=train_index, test_index=test_index)
+    print('start prediction')
+    model = argus.load_model('unet_fold_0\model-002-0.002769.pth')
 
-        callbacks = [
-            MonitorCheckpoint(dir_path=f'unet_fold_{i}', monitor='val_loss', max_saves=3),
-            ReduceLROnPlateau(monitor='val_loss', patience=30, factor=0.64, min_lr=1e-8),
-            EarlyStopping(monitor='val_loss', patience=50),
-            LoggingToFile(f'unet_fold_{i}.log'),
-        ]
+    tiler = ImageSlicer(train.shape[:-1] + (1,), tile_size=(896, 256), tile_step=(100, 100))
+    merger = CudaTileMerger(tiler.target_shape, 6, tiler.weight)
 
-        model.fit(train_loader,
-              val_loader=val_loader,
-              num_epochs=5,
-              metrics=['loss'],
-              callbacks=callbacks,
-              metrics_on_train=False)
+    test_labels = []
+    i=0
+    for img in test.transpose(2, 0, 1):
+        tiles = [tile for tile in tiler.split(img[:, :, None])]
+        print(i/251)
+        for tiles_batch, coords_batch in DataLoader(list(zip(tiles, tiler.crops)), batch_size=2):
+            # print(len(tiles_batch))
+            # print('a')
+            tiles_batch = tiles_batch.permute(0, 3, 1, 2)
+            # print('b')
+            pred_batch = torch.softmax(model.predict(tiles_batch), axis=1)
+            # print('c')
+            merger.integrate_batch(pred_batch, coords_batch)
+            # print('d')
+        merged_mask = merger.merge()
+        merged_mask = merged_mask.permute(1, 2, 0).cpu().numpy()
+        merged_mask = tiler.crop_to_orignal_size(merged_mask).argmax(2)
+        test_labels.append(merged_mask)
+        i+=1
+
+    test_labels = np.stack(test_labels).transpose(1, 2, 0)
+
+    print('finish pred, start to save')
+
+    np.savez_compressed(
+        'prediction.npz',
+        prediction=test_labels.astype(labels.dtype) + 1
+    )
+
+    print('finish saving')
