@@ -228,7 +228,7 @@ if __name__ == "__main__":
     #           metrics_on_train=False)
 
     print('start prediction')
-    model = argus.load_model('unet_fold_0\model-002-0.002769.pth')
+    model = argus.load_model('unet_fold_0\model-692-0.053404.pth')
 
     tiler = ImageSlicer(train.shape[:-1] + (1,), tile_size=(896, 256), tile_step=(100, 100))
     merger = CudaTileMerger(tiler.target_shape, 6, tiler.weight)
