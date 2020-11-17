@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from utils import *
 import matplotlib.pyplot as plt
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold , train_test_split
 from copy import copy
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
@@ -25,64 +25,31 @@ from pytorch_toolbelt.losses import LovaszLoss
 
 if __name__ == "__main__":
 
-    train, labels, test = importData('data/data_train.npz','data/labels_train.npz','data/data_test_1.npz')
-    labels -= 1
 
-    #%%
-
-    # fig, axs = plt.subplots(1,2)
-    # axs[0].imshow(train[:,380,:],cmap='seismic')
-    #
-    # axs[1].imshow(labels[:,380,:],cmap='seismic')
-    # plt.show()
-
-    #%% md
-
-     ## Normalization with respect to the test data
-
-    #%%
     print('start loading')
-
-    adjusted_test_img = np.concatenate([train, test], axis=2)
-
-    _min, _max = adjusted_test_img.min(), adjusted_test_img.max()
-
-    train = (train - _min) / (_max - _min)
-    test = (test - _min) / (_max - _min)
-    adjusted_test_img = (adjusted_test_img - _min) / (_max - _min)
-
-    del adjusted_test_img
-    # del train
-    # del labels
+    train = np.load('data/train_normalized.npz', allow_pickle=True, mmap_mode='r')
+    train = train['prediction']
+    test = np.load('data/test_normalized.npz', allow_pickle=True, mmap_mode='r')
+    test = test['prediction']
+    labels = np.load('data/label_normalized.npz', allow_pickle=True, mmap_mode='r')
+    labels = labels['prediction']
     print('data loaded')
-    #%% md
+
+    X_train, X_test, y_train, y_test = train_test_split(train.transpose(2, 0, 1), labels.transpose(2, 0, 1),test_size=0.33, random_state=42)
+    X_train, X_test, y_train, y_test = X_train.transpose(1, 2, 0), X_test.transpose(1, 2, 0), y_train.transpose(1, 2, 0), y_test.transpose(1, 2, 0)
+    print('Data splitted')
 
     ## Create K-folds index from every possible vertical slice (Z,X and Z,Y)
 
-    #%%
-
-    # verticals = [0 for _ in range(train.shape[1])] + [1 for _ in range(train.shape[2])]
-    # folds = list(StratifiedKFold(n_splits=5, random_state=42, shuffle=True).split(X=verticals, y=verticals))
-    # print('fold created')
-    #%%
-
-    # img = train[:,5]
-    # img800 = train[:,:,800-482]
-    # print(img.shape)
-    # image = img[:, :, None]
-    # print(image.shape)
-    # tran = image.transpose(2,0,1)
-    # print(tran.shape)
-
-    #%%
 
 
+    verticals = [0 for _ in range(train.shape[1])] + [1 for _ in range(train.shape[2])]
+    folds = list(StratifiedKFold(n_splits=5, random_state=42, shuffle=True).split(X=verticals, y=verticals))
+    print('fold created')
 
-    #%% md
 
     ## Dataset class
 
-    #%%
 
     class SeismicFaciesDataset(Dataset):
         def __init__(self, img, labels, train=True):
@@ -113,12 +80,7 @@ if __name__ == "__main__":
 
             return image.transpose(2, 0, 1), mask
 
-
-    #%% md
-
     ### HomeMade function to get data using DataLoader
-
-    #%%
 
     def get_data_loaders(dataset, batch_size, train_index, test_index):
         train_dataset, test_dataset = Subset(dataset, train_index), Subset(copy(dataset), test_index)
@@ -130,15 +92,8 @@ if __name__ == "__main__":
         return train_loader, test_loader
 
 
-    #%% md
-
-    ## Model
-
-    #%% md
-
     ### Loss model (to change maybe)
 
-    #%%
 
     class LovaszBCELoss(torch.nn.Module):
         def __init__(self, lovasz_weight=0.75, ce_weight=0.25):
@@ -161,19 +116,13 @@ if __name__ == "__main__":
 
             return lovasz + ce
 
-    #%% md
-
     ### Model based on argus
 
-    #%%
 
     class SeismicFaciesModel(argus.Model):
         nn_module = smp.Unet
         optimizer = optim.SGD
         loss = LovaszBCELoss
-
-    #%%
-
     params = {
         'nn_module': {
             'encoder_depth': 3,
@@ -192,40 +141,31 @@ if __name__ == "__main__":
         'device': 'cuda'
     }
 
-    #%% md
-
     ## Training
-
-    #%%
-
-    # dataset = SeismicFaciesDataset(train, train)
-
-    #%%
+    dataset = SeismicFaciesDataset(train, train)
 
 
+    print('start trainning loop')
+    for i, (train_index, test_index) in enumerate(folds):
+        print(i)
+        model = SeismicFaciesModel(params)
+        model.set_device(0)
 
-    #%%
-    # print('start trainning loop')
-    # for i, (train_index, test_index) in enumerate(folds):
-    #     print(i)
-    #     model = SeismicFaciesModel(params)
-    #     model.set_device(0)
-    #
-    #     train_loader, val_loader = get_data_loaders(dataset, batch_size=1, train_index=train_index, test_index=test_index)
-    #
-    #     callbacks = [
-    #         MonitorCheckpoint(dir_path=f'unet_fold_{i}', monitor='val_loss', max_saves=3),
-    #         ReduceLROnPlateau(monitor='val_loss', patience=30, factor=0.64, min_lr=1e-8),
-    #         EarlyStopping(monitor='val_loss', patience=50),
-    #         LoggingToFile(f'unet_fold_{i}.log'),
-    #     ]
-    #
-    #     model.fit(train_loader,
-    #           val_loader=val_loader,
-    #           num_epochs=5,
-    #           metrics=['loss'],
-    #           callbacks=callbacks,
-    #           metrics_on_train=False)
+        train_loader, val_loader = get_data_loaders(dataset, batch_size=1, train_index=train_index, test_index=test_index)
+
+        callbacks = [
+            MonitorCheckpoint(dir_path=f'unet_fold_{i}', monitor='val_loss', max_saves=3),
+            ReduceLROnPlateau(monitor='val_loss', patience=30, factor=0.64, min_lr=1e-8),
+            EarlyStopping(monitor='val_loss', patience=50),
+            LoggingToFile(f'unet_fold_{i}.log'),
+        ]
+
+        model.fit(train_loader,
+              val_loader=val_loader,
+              num_epochs=5,
+              metrics=['loss'],
+              callbacks=callbacks,
+              metrics_on_train=False)
 
     print('start prediction')
     model = argus.load_model('unet_fold_0\model-692-0.053404.pth')
@@ -258,7 +198,7 @@ if __name__ == "__main__":
     print('finish pred, start to save')
 
     np.savez_compressed(
-        'prediction.npz',
+        'predictions/prediction.npz',
         prediction=test_labels.astype(labels.dtype) + 1
     )
 
